@@ -61,8 +61,8 @@ export function PassPlayGame() {
         onUndo={handleUndoRequest}
       />
       
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-lg mb-6 flex justify-between px-2 opacity-50">
+    <div className="flex-1 flex flex-col items-center justify-center p-1 sm:p-4 w-full">
+  <div className="w-full max-w-[95vw] sm:max-w-[520px] mb-2 flex justify-between px-2 opacity-50">
           <div className="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 transition-opacity" style={{ opacity: game.turn() === 'b' ? 1 : 0.5 }}>
             <div className="w-8 h-8 bg-zinc-800 rounded flex items-center justify-center font-serif text-zinc-100 text-xl">
               ♚
