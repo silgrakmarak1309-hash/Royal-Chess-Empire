@@ -3,20 +3,30 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Chess Game API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: user
+    description: User profile and progress
+  - name: game
+    description: Game actions
+  - name: withdrawal
+    description: Cash withdrawal
+  - name: admin
+    description: Admin operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +34,425 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /user/me:
+    get:
+      operationId: getMe
+      tags: [user]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /user/daily-bonus:
+    post:
+      operationId: claimDailyBonus
+      tags: [user]
+      summary: Claim daily bonus (after watching ad)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DailyBonusInput"
+      responses:
+        "200":
+          description: Bonus claimed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoinUpdateResponse"
+        "400":
+          description: Already claimed today or ad not watched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /user/watch-ad:
+    post:
+      operationId: watchAd
+      tags: [user]
+      summary: Credit coins after watching a rewarded ad
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Coins credited
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoinUpdateResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /game/campaign/complete:
+    post:
+      operationId: completeCampaignLevel
+      tags: [game]
+      summary: Complete a campaign level (awards coins, unlocks next level)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignLevelInput"
+      responses:
+        "200":
+          description: Level completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LevelCompleteResponse"
+        "400":
+          description: Invalid level or already completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /game/campaign/lose:
+    post:
+      operationId: loseCampaignLevel
+      tags: [game]
+      summary: Record a campaign loss (deducts a life)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Life deducted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LivesResponse"
+        "400":
+          description: No lives remaining
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /game/undo:
+    post:
+      operationId: confirmUndo
+      tags: [game]
+      summary: Confirm undo after ad was watched (server-side validation)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Undo confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UndoResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /game/hint:
+    post:
+      operationId: useHint
+      tags: [game]
+      summary: Use a hint (costs 50 coins, server-validated)
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Hint granted, coins deducted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CoinUpdateResponse"
+        "402":
+          description: Insufficient coins
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /withdrawal/request:
+    post:
+      operationId: requestWithdrawal
+      tags: [withdrawal]
+      summary: Submit a withdrawal request
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawalInput"
+      responses:
+        "201":
+          description: Withdrawal request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WithdrawalResponse"
+        "400":
+          description: Insufficient coins or daily limit hit
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /withdrawal/my:
+    get:
+      operationId: getMyWithdrawals
+      tags: [withdrawal]
+      summary: Get user's own withdrawal history
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of withdrawals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Withdrawal"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/withdrawals:
+    get:
+      operationId: adminGetWithdrawals
+      tags: [admin]
+      summary: Admin - get all withdrawal requests
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: All withdrawal requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminWithdrawal"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden - not admin
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/withdrawals/{id}/approve:
+    post:
+      operationId: adminApproveWithdrawal
+      tags: [admin]
+      summary: Admin - mark withdrawal as paid
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Marked as paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminWithdrawal"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/withdrawals/{id}/reject:
+    post:
+      operationId: adminRejectWithdrawal
+      tags: [admin]
+      summary: Admin - reject withdrawal and refund coins
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rejected and coins refunded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminWithdrawal"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Admin - get platform stats
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +462,188 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    RegisterInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+
+    UserProfile:
+      type: object
+      required: [id, email, coins, lives, unlockedLevel, dailyBonusDay, lastDailyBonusDate, isAdmin]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        coins:
+          type: integer
+        lives:
+          type: integer
+        unlockedLevel:
+          type: integer
+        dailyBonusDay:
+          type: integer
+        lastDailyBonusDate:
+          type: ["string", "null"]
+        lastWithdrawalDate:
+          type: ["string", "null"]
+        isAdmin:
+          type: boolean
+
+    DailyBonusInput:
+      type: object
+      required: [doubled]
+      properties:
+        doubled:
+          type: boolean
+
+    CoinUpdateResponse:
+      type: object
+      required: [coins, coinsAdded]
+      properties:
+        coins:
+          type: integer
+        coinsAdded:
+          type: integer
+        message:
+          type: string
+
+    CampaignLevelInput:
+      type: object
+      required: [level]
+      properties:
+        level:
+          type: integer
+
+    LevelCompleteResponse:
+      type: object
+      required: [coins, coinsAdded, unlockedLevel]
+      properties:
+        coins:
+          type: integer
+        coinsAdded:
+          type: integer
+        unlockedLevel:
+          type: integer
+
+    LivesResponse:
+      type: object
+      required: [lives]
+      properties:
+        lives:
+          type: integer
+        message:
+          type: string
+
+    UndoResponse:
+      type: object
+      required: [allowed]
+      properties:
+        allowed:
+          type: boolean
+
+    WithdrawalInput:
+      type: object
+      required: [amount, upiId]
+      properties:
+        amount:
+          type: integer
+          enum: [10, 20, 50]
+        upiId:
+          type: string
+          minLength: 3
+
+    WithdrawalResponse:
+      type: object
+      required: [id, amount, status]
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        status:
+          type: string
+        coins:
+          type: integer
+
+    Withdrawal:
+      type: object
+      required: [id, amount, upiId, status, createdAt]
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        upiId:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+        coinsDeducted:
+          type: integer
+
+    AdminWithdrawal:
+      type: object
+      required: [id, amount, upiId, status, createdAt, userEmail, coinsDeducted]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userEmail:
+          type: string
+        amount:
+          type: integer
+        upiId:
+          type: string
+        status:
+          type: string
+        coinsDeducted:
+          type: integer
+        createdAt:
+          type: string
+
+    AdminStats:
+      type: object
+      required: [totalUsers, totalWithdrawals, pendingWithdrawals, totalCoinsInSystem]
+      properties:
+        totalUsers:
+          type: integer
+        totalWithdrawals:
+          type: integer
+        pendingWithdrawals:
+          type: integer
+        totalCoinsInSystem:
+          type: integer

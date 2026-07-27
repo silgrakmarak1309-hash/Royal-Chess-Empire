@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: 40 33% 97%; /* #f9f8f4 */
+  --foreground: 232 28% 14%; /* #1A1A2E */
+  --border: 30 15% 85%; /* Soft beige border */
+  --input: 30 15% 85%;
+  --ring: 30 35% 25%; /* Dark wood focus ring */
+
+  --card: 0 0% 100%;
+  --card-foreground: 232 28% 14%;
+  --card-border: 30 15% 85%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 232 28% 14%;
+  --popover-border: 30 15% 85%;
+
+  --primary: 32 76% 16%; /* Dark walnut #4A2C0A */
+  --primary-foreground: 40 33% 97%;
+
+  --secondary: 47 69% 52%; /* Gold */
+  --secondary-foreground: 32 76% 16%;
+
+  --muted: 36 20% 92%;
+  --muted-foreground: 30 10% 45%;
+
+  --accent: 36 20% 92%;
+  --accent-foreground: 232 28% 14%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
+  --app-font-serif: 'Playfair Display', serif;
+  --app-font-mono: 'Menlo', monospace;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 232 28% 10%;
+  --foreground: 40 33% 97%;
+  --border: 232 20% 25%;
+  --input: 232 20% 25%;
+  --ring: 47 69% 52%;
+
+  --card: 232 28% 14%;
+  --card-foreground: 40 33% 97%;
+  --card-border: 232 20% 25%;
+
+  --popover: 232 28% 14%;
+  --popover-foreground: 40 33% 97%;
+  --popover-border: 232 20% 25%;
+
+  --primary: 47 69% 52%;
+  --primary-foreground: 32 76% 16%;
+
+  --secondary: 32 76% 16%;
+  --secondary-foreground: 40 33% 97%;
+
+  --muted: 232 20% 20%;
+  --muted-foreground: 232 10% 60%;
+
+  --accent: 232 20% 20%;
+  --accent-foreground: 40 33% 97%;
+
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 40 33% 97%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+.chess-board-outer {
+  background: linear-gradient(135deg, #4A2C0A 0%, #2A1703 100%);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 10px rgba(0,0,0,0.8);
+  border: 4px solid #1c0e01;
+  border-radius: 4px;
+}
+
+.chess-board-inner {
+  box-shadow: 0 0 15px rgba(0,0,0,0.8) inset;
+}
+
+.chess-piece {
+  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  transition: transform 0.1s ease, text-shadow 0.1s ease;
+}
+
+.chess-piece:hover {
+  transform: translateY(-2px);
+  text-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.chess-piece-white {
+  color: #F5F0E8;
+  text-shadow: 0px 1px 0px #666, 0px 2px 3px rgba(0,0,0,0.5);
+}
+
+.chess-piece-black {
+  color: #1A1A2E;
+  text-shadow: 0px 1px 0px #aaa, 0px 2px 3px rgba(0,0,0,0.8);
+}

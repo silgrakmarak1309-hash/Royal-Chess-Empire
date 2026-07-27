@@ -1,0 +1,2 @@
+- [Chess App Auth](chess-auth.md) — JWT auth with bcryptjs; admin locked to grejamarak@gmail.com; token in localStorage as 'chess_token'
+- [Chess DB Schema](chess-db.md) — users + withdrawals tables; daily bonus day tracked as integer 1-7; withdrawal date tracked per-day as date string

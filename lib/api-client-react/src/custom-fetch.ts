@@ -337,6 +337,11 @@ export async function customFetch<T = unknown>(
 
   const headers = mergeHeaders(isRequest(input) ? input.headers : undefined, headersInit);
 
+  const token = typeof window !== 'undefined' ? localStorage.getItem('chess_token') : null;
+  if (token) {
+    headers.set("authorization", `Bearer ${token}`);
+  }
+
   if (
     typeof init.body === "string" &&
     !headers.has("content-type") &&

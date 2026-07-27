@@ -1,6 +1,6 @@
-# [Project name]
+# Royal Chess Club
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A premium chess game web app with Email authentication, Campaign mode (100 AI levels), Pass & Play local multiplayer, coin/reward system, daily bonuses, cash withdrawal, and a secret admin panel.
 
 ## Run & Operate
 
