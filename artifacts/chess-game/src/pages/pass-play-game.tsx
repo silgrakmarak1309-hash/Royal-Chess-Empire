@@ -64,7 +64,7 @@ export function PassPlayGame() {
     <div className="min-h-screen bg-zinc-950 flex flex-col">
       <GameHeader isPassAndPlay={true} onUndo={handleUndoRequest} />
 
-      <div className="flex-1 flex flex-col items-center justify-center p-1 sm:p-4 w-full">
+      <div className="flex-1 flex flex-col items-center justify-center p-0 w-full">
         <div className="w-full max-w-[95vw] sm:max-w-[520px] mb-2 flex justify-between px-2 opacity-50">
           <div
             className="flex items-center gap-3 bg-zinc-900 px-4 py-2 rounded-lg border border-zinc-800 transition-opacity"
