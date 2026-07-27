@@ -154,15 +154,15 @@ export function AdminPanel() {
                       <td className="p-4 whitespace-nowrap">
                         <span className={twMerge(
                           "px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider",
-                          w.status === 'PENDING' ? "bg-orange-500/10 text-orange-600" :
-                          w.status === 'PAID' ? "bg-green-500/10 text-green-600" :
+                          w.status === 'pending' ? "bg-orange-500/10 text-orange-600" :
+                          w.status === 'completed' ? "bg-green-500/10 text-green-600" :
                           "bg-red-500/10 text-red-600"
                         )}>
-                          {w.status}
+                          {w.status === 'pending' ? 'Pending' : w.status === 'completed' ? 'Paid' : 'Rejected'}
                         </span>
                       </td>
                       <td className="p-4 whitespace-nowrap">
-                        {w.status === 'PENDING' && (
+                        {w.status === 'pending' && (
                           <div className="flex gap-2">
                             <Button size="sm" onClick={() => handleApprove(w.id)} disabled={approveMutation.isPending} className="bg-green-600 hover:bg-green-700 text-white h-8">
                               <Check className="w-4 h-4 mr-1" /> Paid

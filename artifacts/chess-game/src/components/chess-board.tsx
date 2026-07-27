@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Chess, Square, Move } from 'chess.js';
-import { clsx } from 'clsx';
+import { Chess, Square } from 'chess.js';
 import { twMerge } from 'tailwind-merge';
 
 const PIECE_SYMBOLS: Record<string, Record<string, string>> = {
@@ -21,7 +20,6 @@ export function ChessBoard({ game, onMove, orientation = 'w', disabled = false }
   const [board, setBoard] = useState(game.board());
   const [lastMove, setLastMove] = useState<{from: string, to: string} | null>(null);
 
-  // Sync board with game state
   useEffect(() => {
     setBoard(game.board());
     const history = game.history({ verbose: true });
@@ -37,11 +35,9 @@ export function ChessBoard({ game, onMove, orientation = 'w', disabled = false }
     if (disabled) return;
 
     if (selectedSquare) {
-      // Try to move
       try {
         const move = game.moves({ verbose: true }).find(m => m.from === selectedSquare && m.to === square);
         if (move) {
-          // If promotion, auto-queen for simplicity
           const moveData = {
             from: selectedSquare,
             to: square,
@@ -57,7 +53,6 @@ export function ChessBoard({ game, onMove, orientation = 'w', disabled = false }
       }
     }
 
-    // Select piece
     const piece = game.get(square);
     if (piece && piece.color === game.turn()) {
       setSelectedSquare(square);
@@ -77,75 +72,111 @@ export function ChessBoard({ game, onMove, orientation = 'w', disabled = false }
     return isLight ? 'bg-[#D4A97F]' : 'bg-[#8B5E3C]';
   };
 
-  const renderSquare = (fileIndex: number, rankIndex: number) => {
-    const file = files[fileIndex];
-    const rank = ranks[rankIndex];
-    const square = `${file}${rank}` as Square;
-    const piece = board[rankIndex][fileIndex];
-
-    const isSelected = selectedSquare === square;
-    const isValidMove = validMoves.includes(square);
-    const isLastMove = lastMove?.from === square || lastMove?.to === square;
-
-    return (
-      <div
-        key={square}
-        className={twMerge(
-          "relative flex items-center justify-center w-full aspect-square text-4xl sm:text-5xl cursor-pointer select-none",
-          getSquareColor(fileIndex, rankIndex),
-          isSelected && "after:absolute after:inset-0 after:bg-[#FFD700] after:opacity-60",
-          isLastMove && !isSelected && "after:absolute after:inset-0 after:bg-blue-400 after:opacity-40"
-        )}
-        onClick={() => handleSquareClick(square)}
-      >
-        {isValidMove && (
-          <div className="absolute z-10 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full opacity-60 pointer-events-none" />
-        )}
-        {piece && (
-          <span 
-            className={twMerge(
-              "chess-piece relative z-20 font-serif leading-none",
-              piece.color === 'w' ? 'chess-piece-white' : 'chess-piece-black'
-            )}
-          >
-            {PIECE_SYMBOLS[piece.color][piece.type]}
-          </span>
-        )}
-      </div>
-    );
-  };
-
-  // Adjust rendering order based on orientation
   const renderRanks = orientation === 'w' ? ranks : [...ranks].reverse();
   const renderFiles = orientation === 'w' ? files : [...files].reverse();
 
   return (
-    <div className="chess-board-outer p-4 sm:p-6 w-full max-w-[520px] mx-auto select-none">
-      <div className="chess-board-inner border-2 border-[#1c0e01] bg-[#4A2C0A] relative">
-        {/* Top/Bottom File Labels */}
-        <div className="absolute -top-5 sm:-top-6 left-0 right-0 flex text-[#E6CBA8] font-serif text-xs sm:text-sm font-semibold px-0.5">
-          {renderFiles.map(f => <div key={f} className="flex-1 text-center">{f}</div>)}
-        </div>
-        <div className="absolute -bottom-5 sm:-bottom-6 left-0 right-0 flex text-[#E6CBA8] font-serif text-xs sm:text-sm font-semibold px-0.5">
-          {renderFiles.map(f => <div key={f} className="flex-1 text-center">{f}</div>)}
+    /* 
+      Outer wrapper: fills available width, capped at 560px on larger screens.
+      Uses padding to make room for the rank/file labels that sit outside the board grid.
+    */
+    <div className="w-full select-none" style={{ maxWidth: 'min(100%, 560px)', margin: '0 auto' }}>
+      {/* File labels — top */}
+      <div className="flex pl-6 pr-0 mb-0.5">
+        {renderFiles.map(f => (
+          <div key={f} className="flex-1 text-center text-[#8B6914] font-serif text-[10px] sm:text-xs font-semibold">{f}</div>
+        ))}
+      </div>
+
+      <div className="flex">
+        {/* Rank labels — left */}
+        <div className="flex flex-col justify-around w-6 shrink-0 pr-1">
+          {renderRanks.map(r => (
+            <div key={r} className="flex items-center justify-center text-[#8B6914] font-serif text-[10px] sm:text-xs font-semibold" style={{ height: '12.5%' }}>{r}</div>
+          ))}
         </div>
 
-        {/* Left/Right Rank Labels */}
-        <div className="absolute top-0 bottom-0 -left-4 sm:-left-5 flex flex-col text-[#E6CBA8] font-serif text-xs sm:text-sm font-semibold py-0.5">
-          {renderRanks.map(r => <div key={r} className="flex-1 flex items-center justify-center w-4 sm:w-5">{r}</div>)}
-        </div>
-        <div className="absolute top-0 bottom-0 -right-4 sm:-right-5 flex flex-col text-[#E6CBA8] font-serif text-xs sm:text-sm font-semibold py-0.5">
-          {renderRanks.map(r => <div key={r} className="flex-1 flex items-center justify-center w-4 sm:w-5">{r}</div>)}
+        {/* Board grid */}
+        <div
+          className="flex-1 border-2 border-[#3B1E08] shadow-2xl"
+          style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)' }}
+        >
+          <div className="grid grid-cols-8 w-full aspect-square">
+            {renderRanks.map((r) =>
+              renderFiles.map((f) => {
+                const fileIndex = files.indexOf(f);
+                const rankIndex = ranks.indexOf(r);
+                const square = `${f}${r}` as Square;
+                const piece = board[rankIndex][fileIndex];
+
+                const isSelected = selectedSquare === square;
+                const isValidMove = validMoves.includes(square);
+                const isLastMove = lastMove?.from === square || lastMove?.to === square;
+
+                return (
+                  <div
+                    key={square}
+                    className={twMerge(
+                      "relative flex items-center justify-center cursor-pointer select-none",
+                      getSquareColor(fileIndex, rankIndex)
+                    )}
+                    style={{ aspectRatio: '1' }}
+                    onClick={() => handleSquareClick(square)}
+                  >
+                    {/* Highlights */}
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-[#FFD700] opacity-60 pointer-events-none" />
+                    )}
+                    {isLastMove && !isSelected && (
+                      <div className="absolute inset-0 bg-blue-400 opacity-35 pointer-events-none" />
+                    )}
+
+                    {/* Valid move dot */}
+                    {isValidMove && !piece && (
+                      <div className="absolute z-10 w-[28%] h-[28%] bg-green-700 rounded-full opacity-50 pointer-events-none" />
+                    )}
+                    {isValidMove && piece && (
+                      <div className="absolute inset-0 border-[3px] border-green-600 rounded-sm opacity-60 pointer-events-none z-10" />
+                    )}
+
+                    {/* Piece */}
+                    {piece && (
+                      <span
+                        className={twMerge(
+                          "relative z-20 leading-none select-none",
+                          piece.color === 'w' ? 'chess-piece-white' : 'chess-piece-black'
+                        )}
+                        style={{
+                          fontSize: 'clamp(1.5rem, 5vw, 3rem)',
+                          textShadow: piece.color === 'w'
+                            ? '0 1px 3px rgba(0,0,0,0.8), 0 0 1px rgba(0,0,0,0.5)'
+                            : '0 1px 2px rgba(0,0,0,0.9), 0 0 4px rgba(0,0,0,0.4)',
+                          color: piece.color === 'w' ? '#F5F0E8' : '#1A1A2E',
+                        }}
+                      >
+                        {PIECE_SYMBOLS[piece.color][piece.type]}
+                      </span>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-8 grid-rows-8 w-full">
-          {renderRanks.map((r) => 
-            renderFiles.map((f) => 
-              renderSquare(files.indexOf(f), ranks.indexOf(r))
-            )
-          )}
+        {/* Rank labels — right */}
+        <div className="flex flex-col justify-around w-6 shrink-0 pl-1">
+          {renderRanks.map(r => (
+            <div key={r} className="flex items-center justify-center text-[#8B6914] font-serif text-[10px] sm:text-xs font-semibold" style={{ height: '12.5%' }}>{r}</div>
+          ))}
         </div>
+      </div>
+
+      {/* File labels — bottom */}
+      <div className="flex pl-6 pr-0 mt-0.5">
+        {renderFiles.map(f => (
+          <div key={f} className="flex-1 text-center text-[#8B6914] font-serif text-[10px] sm:text-xs font-semibold">{f}</div>
+        ))}
       </div>
     </div>
   );

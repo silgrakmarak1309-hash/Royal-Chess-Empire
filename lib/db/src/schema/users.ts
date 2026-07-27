@@ -12,6 +12,8 @@ export const usersTable = pgTable("users", {
   dailyBonusDay: integer("daily_bonus_day").notNull().default(0),
   lastDailyBonusDate: date("last_daily_bonus_date", { mode: "string" }),
   lastWithdrawalDate: date("last_withdrawal_date", { mode: "string" }),
+  dailyAdsWatched: integer("daily_ads_watched").notNull().default(0),
+  lastAdWatchDate: date("last_ad_watch_date", { mode: "string" }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

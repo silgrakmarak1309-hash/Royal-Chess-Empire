@@ -19,6 +19,8 @@ router.get("/user/me", requireAuth, async (req, res): Promise<void> => {
     res.status(401).json({ error: "User not found" });
     return;
   }
+  const today = todayStr();
+  const dailyAdsWatched = user.lastAdWatchDate === today ? user.dailyAdsWatched : 0;
   res.json({
     id: user.id,
     email: user.email,
@@ -28,6 +30,7 @@ router.get("/user/me", requireAuth, async (req, res): Promise<void> => {
     dailyBonusDay: user.dailyBonusDay,
     lastDailyBonusDate: user.lastDailyBonusDate,
     lastWithdrawalDate: user.lastWithdrawalDate,
+    dailyAdsWatched,
     isAdmin: isAdminEmail(user.email),
   });
 });
@@ -77,16 +80,40 @@ router.post("/user/daily-bonus", requireAuth, async (req, res): Promise<void> =>
   res.json({ coins: newCoins, coinsAdded, message: `Daily bonus Day ${nextDay} claimed!` });
 });
 
+const DAILY_AD_LIMIT = 20;
+
 router.post("/user/watch-ad", requireAuth, async (req, res): Promise<void> => {
   const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
   if (!user) {
     res.status(401).json({ error: "User not found" });
     return;
   }
+
+  const today = todayStr();
+
+  // Reset counter if it's a new day
+  const currentAdsWatched = user.lastAdWatchDate === today ? user.dailyAdsWatched : 0;
+
+  if (currentAdsWatched >= DAILY_AD_LIMIT) {
+    res.status(429).json({
+      error: "Aapne aaj ki ad dekhte ki limit (20 Ads) poori kar li hai! Kal dubara try karein.",
+    });
+    return;
+  }
+
+  const newAdsWatched = currentAdsWatched + 1;
   const coinsAdded = 10;
   const newCoins = user.coins + coinsAdded;
-  await db.update(usersTable).set({ coins: newCoins }).where(eq(usersTable.id, user.id));
-  res.json({ coins: newCoins, coinsAdded, message: "+10 coins for watching an ad!" });
+
+  await db.update(usersTable)
+    .set({ coins: newCoins, dailyAdsWatched: newAdsWatched, lastAdWatchDate: today })
+    .where(eq(usersTable.id, user.id));
+
+  res.json({
+    coins: newCoins,
+    coinsAdded,
+    message: `+10 coins! (${newAdsWatched}/${DAILY_AD_LIMIT} ads watched today)`,
+  });
 });
 
 export default router;
