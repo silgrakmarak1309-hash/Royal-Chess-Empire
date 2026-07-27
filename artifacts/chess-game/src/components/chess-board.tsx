@@ -80,7 +80,7 @@ export function ChessBoard({ game, onMove, orientation = 'w', disabled = false }
       Outer wrapper: fills available width, capped at 560px on larger screens.
       Uses padding to make room for the rank/file labels that sit outside the board grid.
     */
-    <div className="w-full select-none" style={{ maxWidth: 'min(100%, 560px)', margin: '0 auto' }}>
+  <div className="w-full select-none" style={{ maxWidth: 'min(92vw, 72vh)', margin: '0 auto' }}>
       {/* File labels — top */}
       <div className="flex pl-6 pr-0 mb-0.5">
         {renderFiles.map(f => (
