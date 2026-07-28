@@ -23,7 +23,9 @@ jobs:
         run: pnpm install
 
       - name: Build Web App
-        run: BASE_PATH="/" PORT=8080 pnpm --filter @workspace/chess-game run build
+        run: |
+          cd artifacts/chess-game
+          BASE_PATH="/" PORT=8080 pnpm run build
 
       - name: Sync Capacitor
         run: cd artifacts/chess-game && npx cap sync android
