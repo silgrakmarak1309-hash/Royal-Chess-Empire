@@ -23,10 +23,21 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Dependencies with NPM
-        run: |
-          cd artifacts/chess-game
-          npm install --legacy-peer-deps
+      - name: Setup pnpm
+  uses: pnpm/action-setup@v4
+  with:
+    version: 9  # ya jo version aap use kar rahe ho
+
+- name: Setup Node.js
+  uses: actions/setup-node@v4
+  with:
+    node-version: 22
+    cache: 'pnpm'
+
+- name: Install Dependencies
+  run: |
+    cd artifacts/chess-game
+    pnpm install
 
       - name: Create Web Dist Folder
         run: |
