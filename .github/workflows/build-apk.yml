@@ -20,12 +20,12 @@ jobs:
         run: npm install -g pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build Web App
         run: |
           cd artifacts/chess-game
-          BASE_PATH="/" PORT=8080 pnpm run build
+          BASE_PATH="/" PORT=8080 npx vite build
 
       - name: Sync Capacitor
         run: cd artifacts/chess-game && npx cap sync android
