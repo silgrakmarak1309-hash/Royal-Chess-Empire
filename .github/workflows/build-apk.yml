@@ -23,18 +23,24 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Build Web App
+        env:
+          NODE_ENV: production
+          BASE_PATH: "/"
+          PORT: "8080"
         run: |
           cd artifacts/chess-game
-          BASE_PATH="/" PORT=8080 npx vite build
-
-      - name: Sync Capacitor
-        run: cd artifacts/chess-game && npx cap sync android
+          pnpm run build || npx vite build --emptyOutDir
 
       - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Sync Capacitor
+        run: |
+          cd artifacts/chess-game
+          npx cap sync android
 
       - name: Build APK with Gradle
         run: |
