@@ -84,4 +84,22 @@ router.post("/game/hint", requireAuth, async (req, res): Promise<void> => {
   res.json({ coins: newCoins, coinsAdded: -HINT_COST, message: "Hint granted!" });
 });
 
+router.post("/game/double-win-coins", requireAuth, async (req, res): Promise<void> => {
+  const { amount } = req.body as { amount?: number };
+  if (typeof amount !== "number" || amount < 1 || amount > 500) {
+    res.status(400).json({ error: "Invalid amount" });
+    return;
+  }
+
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
+  if (!user) {
+    res.status(401).json({ error: "User not found" });
+    return;
+  }
+
+  const newCoins = user.coins + amount;
+  await db.update(usersTable).set({ coins: newCoins }).where(eq(usersTable.id, user.id));
+  res.json({ coins: newCoins, coinsAdded: amount });
+});
+
 export default router;
