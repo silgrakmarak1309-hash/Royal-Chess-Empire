@@ -23,31 +23,39 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Capacitor CLI Globally
-        run: npm install -g @capacitor/cli @capacitor/core
+      - name: Install pnpm
+        run: npm install -g pnpm
 
-      - name: Create Web Assets Folder
+      - name: Install Project Dependencies
+        run: |
+          cd artifacts/chess-game
+          pnpm install --no-frozen-lockfile
+
+      - name: Create Web Dist Folder
         run: |
           cd artifacts/chess-game
           mkdir -p dist
           echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/index.html
 
-      - name: Sync Capacitor Android
+      - name: Sync Capacitor Plugins & Generate Cordova Files
         run: |
           cd artifacts/chess-game
-          cap sync android || true
+          npx cap update android
+          npx cap copy android
 
-      - name: Make Gradlew Executable & Build
+      - name: Create Cordova Variables File if Missing
+        run: |
+          cd artifacts/chess-game/android
+          mkdir -p capacitor-cordova-android-plugins
+          touch capacitor-cordova-android-plugins/cordova.variables.gradle
+          echo "ext { cdvMinSizeBytes = 0 }" > capacitor-cordova-android-plugins/cordova.variables.gradle
+
+      - name: Build APK with Gradle
         run: |
           cd artifacts/chess-game/android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: artifacts/chess-game/android/app/build/outputs/apk/debug/app-debug.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
