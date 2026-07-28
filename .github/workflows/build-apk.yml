@@ -23,9 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
-          # Agar pnpm-lock file ki wajah se error aaye to niche wali line delete kar dena
-          cache-dependency-path: 'artifacts/chess-game/pnpm-lock.yaml'
 
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -51,6 +48,7 @@ jobs:
       - name: Ensure Cordova Variables File Exists
         run: |
           cd artifacts/chess-game
+          mkdir -p android/app/src/main/assets/
           touch android/app/src/main/assets/capacitor.config.json || true
 
       - name: Build APK with Gradle
