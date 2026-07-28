@@ -23,13 +23,10 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Install Project Dependencies
+      - name: Install Dependencies with NPM
         run: |
           cd artifacts/chess-game
-          pnpm install --no-frozen-lockfile
+          npm install --legacy-peer-deps
 
       - name: Create Web Dist Folder
         run: |
@@ -37,17 +34,16 @@ jobs:
           mkdir -p dist
           echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/index.html
 
-      - name: Sync Capacitor Plugins & Generate Cordova Files
+      - name: Sync Capacitor Plugins
         run: |
           cd artifacts/chess-game
           npx cap update android
           npx cap copy android
 
-      - name: Create Cordova Variables File if Missing
+      - name: Ensure Cordova Variables File Exists
         run: |
           cd artifacts/chess-game/android
           mkdir -p capacitor-cordova-android-plugins
-          touch capacitor-cordova-android-plugins/cordova.variables.gradle
           echo "ext { cdvMinSizeBytes = 0 }" > capacitor-cordova-android-plugins/cordova.variables.gradle
 
       - name: Build APK with Gradle
@@ -56,7 +52,7 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
