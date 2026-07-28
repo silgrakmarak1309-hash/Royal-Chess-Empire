@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Royal Chess Club</string>
+    <string name="title_activity_main">Royal Chess Club</string>
+    <string name="package_name">com.royalchessclub.app</string>
+    <string name="custom_url_scheme">com.royalchessclub.app</string>
+    <!-- Google AdMob App ID -->
+    <string name="admob_app_id">ca-app-pub-4647188052127146~5480668756</string>
+</resources>

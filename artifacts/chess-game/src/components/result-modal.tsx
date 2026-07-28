@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Coins, HeartCrack, Trophy, Play, CheckCircle2, Loader2 } from 'lucide-react';
 import { Link } from 'wouter';
 import { getGetMeQueryKey } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAdMob } from '@/hooks/use-admob';
 
 interface ResultModalProps {
   open: boolean;
@@ -15,16 +16,15 @@ interface ResultModalProps {
 
 type AdState = 'idle' | 'watching' | 'claimed';
 
-const AD_DURATION = 5; // seconds
+const AD_DURATION = 5; // seconds (web fallback)
 
 export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = false }: ResultModalProps) {
   const queryClient = useQueryClient();
   const [adState, setAdState] = useState<AdState>('idle');
   const [countdown, setCountdown] = useState(AD_DURATION);
   const [isLoading, setIsLoading] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Reset ad state whenever modal opens fresh
+  // Reset state each time the modal opens
   useEffect(() => {
     if (open) {
       setAdState('idle');
@@ -32,26 +32,6 @@ export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = fa
       setIsLoading(false);
     }
   }, [open]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
-
-  const startAd = () => {
-    setAdState('watching');
-    setCountdown(AD_DURATION);
-    timerRef.current = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!);
-          claimDoubleCoins();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
 
   const claimDoubleCoins = async () => {
     setIsLoading(true);
@@ -69,13 +49,30 @@ export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = fa
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       }
     } catch {
-      // silently fail — UI still shows claimed state
+      // silently fail — reward state still shows claimed
     } finally {
       setIsLoading(false);
       setAdState('claimed');
     }
   };
 
+  const { showAd } = useAdMob({
+    onRewarded: claimDoubleCoins,
+    onCountdown: (secondsLeft) => {
+      setCountdown(secondsLeft);
+    },
+    onError: (err) => {
+      console.warn('[AdMob] failed, falling back to simulated timer:', err);
+    },
+  });
+
+  const handleWatchAd = () => {
+    setAdState('watching');
+    setCountdown(AD_DURATION);
+    showAd();
+  };
+
+  // ── Modal content labels ──────────────────────────────────────────────────
   let title = 'Game Over';
   let icon = null;
   let message = '';
@@ -124,13 +121,13 @@ export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = fa
             </div>
           )}
 
-          {/* ── Watch Ad (2x Coins) button — always visible on win ── */}
+          {/* ── Watch Ad (2× Coins) — always visible on campaign win ─────── */}
           {showDoubleCoinsButton && (
             <div className="w-full mb-4">
               {adState === 'idle' && (
                 <Button
-                  onClick={startAd}
-                  className="w-full h-12 bg-yellow-500 hover:bg-yellow-400 text-zinc-900 font-bold font-sans text-base rounded-xl shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-2 transition-all"
+                  onClick={handleWatchAd}
+                  className="w-full h-12 bg-yellow-500 hover:bg-yellow-400 active:scale-95 text-zinc-900 font-bold font-sans text-base rounded-xl shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-2 transition-all"
                 >
                   <Play className="w-5 h-5 fill-zinc-900 stroke-zinc-900" />
                   Watch Ad (2× Coins)
@@ -138,20 +135,24 @@ export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = fa
               )}
 
               {adState === 'watching' && (
-                <div className="w-full h-12 rounded-xl bg-zinc-800 border border-yellow-500/40 flex items-center justify-center gap-3">
-                  <Loader2 className="w-5 h-5 text-yellow-400 animate-spin" />
+                <div className="relative w-full h-12 overflow-hidden rounded-xl bg-zinc-800 border border-yellow-500/40 flex items-center justify-center gap-3">
+                  <Loader2 className="w-5 h-5 text-yellow-400 animate-spin shrink-0" />
                   <span className="text-yellow-400 font-sans font-medium">
                     Ad playing… {countdown}s
                   </span>
-                  {/* Animated progress bar */}
-                  <div className="absolute bottom-0 left-0 h-0.5 bg-yellow-500 transition-all duration-1000"
-                    style={{ width: `${((AD_DURATION - countdown) / AD_DURATION) * 100}%` }} />
+                  {/* Progress bar fills from left to right over AD_DURATION seconds */}
+                  <div
+                    className="absolute bottom-0 left-0 h-0.5 bg-yellow-500 transition-all duration-1000 ease-linear"
+                    style={{ width: `${((AD_DURATION - countdown) / AD_DURATION) * 100}%` }}
+                  />
                 </div>
               )}
 
               {adState === 'claimed' && (
                 <div className="w-full h-12 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center justify-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-400" />
+                  {isLoading
+                    ? <Loader2 className="w-5 h-5 text-green-400 animate-spin" />
+                    : <CheckCircle2 className="w-5 h-5 text-green-400" />}
                   <span className="text-green-400 font-sans font-semibold">
                     +{coinsAwarded} bonus coins added!
                   </span>
@@ -160,6 +161,7 @@ export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = fa
             </div>
           )}
 
+          {/* ── Navigation buttons ────────────────────────────────────────── */}
           <div className="flex gap-4 w-full justify-center">
             <Link href="/home" className="w-full">
               <Button className="w-full bg-zinc-800 text-zinc-100 hover:bg-zinc-700 font-sans">
