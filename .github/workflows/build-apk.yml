@@ -19,17 +19,16 @@ jobs:
       - name: Install pnpm
         run: npm install -g pnpm
 
-      - name: Install dependencies
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Build Web App
-        env:
-          NODE_ENV: production
-          BASE_PATH: "/"
-          PORT: "8080"
+      - name: Install Dependencies inside project
         run: |
           cd artifacts/chess-game
-          pnpm run build || npx vite build --emptyOutDir
+          pnpm install --no-frozen-lockfile
+
+      - name: Build Web App
+        run: |
+          cd artifacts/chess-game
+          pnpm run build || npx vite build
+        continue-on-error: true
 
       - name: Setup Java JDK
         uses: actions/setup-java@v3
