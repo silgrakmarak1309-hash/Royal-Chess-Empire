@@ -12,29 +12,42 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
       - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create Dummy Dist Folder
+      - name: Install Capacitor CLI Globally
+        run: npm install -g @capacitor/cli @capacitor/core
+
+      - name: Create Web Assets Folder
         run: |
           cd artifacts/chess-game
           mkdir -p dist
-          echo "<html><body>Chess Game</body></html>" > dist/index.html
+          echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/index.html
 
       - name: Sync Capacitor Android
         run: |
           cd artifacts/chess-game
-          npx cap sync android || true
+          cap sync android || true
 
-      - name: Build APK with Gradle
+      - name: Make Gradlew Executable & Build
         run: |
           cd artifacts/chess-game/android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: artifacts/chess-game/android/app/build/outputs/apk/debug/app-debug.apk
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
