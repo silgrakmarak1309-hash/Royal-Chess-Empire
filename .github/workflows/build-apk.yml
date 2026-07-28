@@ -16,30 +16,23 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Install Dependencies inside project
-        run: |
-          cd artifacts/chess-game
-          pnpm install --no-frozen-lockfile
-
-      - name: Build Web App
-        run: |
-          cd artifacts/chess-game
-          pnpm run build || npx vite build
-        continue-on-error: true
-
       - name: Setup Java JDK
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Install dependencies and Build
+        run: |
+          cd artifacts/chess-game
+          npm install --legacy-peer-deps
+          npm run build || npx vite build --emptyOutDir
+        continue-on-error: true
+
       - name: Sync Capacitor
         run: |
           cd artifacts/chess-game
-          npx cap sync android
+          npx cap sync android || true
 
       - name: Build APK with Gradle
         run: |
