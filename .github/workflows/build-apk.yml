@@ -80,18 +80,39 @@ jobs:
           echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
           echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
 
-      - name: Inject Exact AdMob App ID & Permissions
+      - name: Safely Inject AdMob App ID & Cleartext Traffic via Python
         run: |
-          MANIFEST_PATH="artifacts/chess-game/android/app/src/main/AndroidManifest.xml"
-          if [ -f "$MANIFEST_PATH" ]; then
-            sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST_PATH"
-            
-            # Remove any placeholder App ID entry if present
-            sed -i '/com.google.android.gms.ads.APPLICATION_ID/d' "$MANIFEST_PATH" || true
-            
-            # Inject REAL AdMob App ID from screenshot
-            sed -i '/<\/application>/i \        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-4647188052127146~5480668756"\/>' "$MANIFEST_PATH"
-          fi
+          python3 -c '
+          import xml.etree.ElementTree as ET
+          import os
+
+          manifest_path = "artifacts/chess-game/android/app/src/main/AndroidManifest.xml"
+          if os.path.exists(manifest_path):
+              ET.register_namespace("android", "http://schemas.android.com/apk/res/android")
+              tree = ET.parse(manifest_path)
+              root = tree.getroot()
+              
+              application = root.find("application")
+              if application is not None:
+                  application.set("{http://schemas.android.com/apk/res/android}usesCleartextTraffic", "true")
+                  
+                  # Check if admob meta-data already exists
+                  exists = False
+                  for child in list(application):
+                      if child.tag == "meta-data" and child.get("{http://schemas.android.com/apk/res/android}name") == "com.google.android.gms.ads.APPLICATION_ID":
+                          child.set("{http://schemas.android.com/apk/res/android}value", "ca-app-pub-4647188052127146~5480668756")
+                          exists = True
+                          break
+                  
+                  if not exists:
+                      meta = ET.Element("meta-data")
+                      meta.set("{http://schemas.android.com/apk/res/android}name", "com.google.android.gms.ads.APPLICATION_ID")
+                      meta.set("{http://schemas.android.com/apk/res/android}value", "ca-app-pub-4647188052127146~5480668756")
+                      application.append(meta)
+                      
+              tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
+              print("AndroidManifest.xml successfully updated with AdMob ID!")
+          '
 
       - name: Configure Gradle Memory
         run: |
