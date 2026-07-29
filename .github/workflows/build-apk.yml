@@ -29,7 +29,12 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
-      - name: Configure Capacitor Server URL for Live Backend
+      - name: Ensure Capacitor AdMob Plugin Installed
+        run: |
+          cd artifacts/chess-game
+          pnpm add @capacitor-community/admob@latest || true
+
+      - name: Configure Capacitor Server URL
         run: |
           CONFIG_PATH="artifacts/chess-game/capacitor.config.ts"
           if [ -f "$CONFIG_PATH" ]; then
@@ -61,7 +66,7 @@ jobs:
           cd artifacts/chess-game
           pnpm run build
 
-      - name: Sync Web Assets & Server Settings to Android
+      - name: Sync Web Assets & Plugins to Android
         run: |
           cd artifacts/chess-game
           npx cap sync android
@@ -74,11 +79,17 @@ jobs:
           echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
           echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
 
-      - name: Configure Android Permissions
+      - name: Inject AdMob App ID into Android Manifest
         run: |
           MANIFEST_PATH="artifacts/chess-game/android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
+            # Cleartext traffic support
             sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST_PATH"
+            
+            # Inject AdMob App ID Metadata if not present
+            if ! grep -q "com.google.android.gms.ads.APPLICATION_ID" "$MANIFEST_PATH"; then
+              sed -i '/<\/application>/i \        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-4647188052127146~3312345678"\/>' "$MANIFEST_PATH"
+            fi
           fi
 
       - name: Configure Gradle Memory
