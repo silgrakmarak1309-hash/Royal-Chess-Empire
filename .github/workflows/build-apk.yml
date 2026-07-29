@@ -29,6 +29,27 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
+      - name: Configure Capacitor Server URL for Live Backend
+        run: |
+          CONFIG_PATH="artifacts/chess-game/capacitor.config.ts"
+          if [ -f "$CONFIG_PATH" ]; then
+            cat << 'EOF' > $CONFIG_PATH
+          import type { CapacitorConfig } from '@capacitor/cli';
+
+          const config: CapacitorConfig = {
+            appId: 'com.royalchessclub.app',
+            appName: 'Royal Chess Empire',
+            webDir: 'dist',
+            server: {
+              url: 'https://royal-chess-empire--silgrakmarak130.replit.app',
+              cleartext: true
+            }
+          };
+
+          export default config;
+          EOF
+          fi
+
       - name: Build Web App
         env:
           PORT: 8080
@@ -40,7 +61,7 @@ jobs:
           cd artifacts/chess-game
           pnpm run build
 
-      - name: Sync Web Assets to Android
+      - name: Sync Web Assets & Server Settings to Android
         run: |
           cd artifacts/chess-game
           npx cap sync android
@@ -53,7 +74,7 @@ jobs:
           echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
           echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
 
-      - name: Allow Network Permissions
+      - name: Configure Android Permissions
         run: |
           MANIFEST_PATH="artifacts/chess-game/android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
