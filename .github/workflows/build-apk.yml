@@ -32,7 +32,7 @@ jobs:
       - name: Build Web App
         run: |
           cd artifacts/chess-game
-          pnpm run build
+          PORT=8080 pnpm run build
 
       - name: Sync Web Assets to Android
         run: |
