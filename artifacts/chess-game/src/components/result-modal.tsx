@@ -66,10 +66,11 @@ export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = fa
     },
   });
 
-  const handleWatchAd = () => {
+  const handleWatchAd = async () => {
     setAdState('watching');
     setCountdown(AD_DURATION);
-    showAd();
+    await showAd();
+  };
   };
 
   // ── Modal content labels ──────────────────────────────────────────────────
