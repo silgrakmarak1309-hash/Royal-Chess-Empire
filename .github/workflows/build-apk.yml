@@ -30,9 +30,15 @@ jobs:
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Build Web App
+        env:
+          PORT: 8080
+          BASE_PATH: /
+          VITE_APP_ENV: production
+          VITE_API_URL: "https://royal-chess-empire--silgrakmarak130.replit.app"
+          VITE_SERVER_URL: "https://royal-chess-empire--silgrakmarak130.replit.app"
         run: |
           cd artifacts/chess-game
-          PORT=8080 BASE_PATH=/ pnpm run build
+          pnpm run build
 
       - name: Sync Web Assets to Android
         run: |
@@ -46,6 +52,13 @@ jobs:
           echo "ext { cdvMinSizeBytes = 0; cdvCompileSizeBytes = 0; cdvPluginPostBuildExtras = []; cdvBuildMultipleApks = false }" > capacitor-cordova-android-plugins/cordova.variables.gradle
           echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
           echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
+
+      - name: Allow HTTP Cleartext & Network Traffic
+        run: |
+          MANIFEST_PATH="artifacts/chess-game/android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST_PATH" ]; then
+            sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST_PATH"
+          fi
 
       - name: Configure Gradle Memory
         run: |
