@@ -34,7 +34,7 @@ jobs:
           cd artifacts/chess-game
           pnpm add @capacitor-community/admob@latest || true
 
-      - name: Configure Capacitor Server URL
+      - name: Configure Capacitor App & AdMob
         run: |
           CONFIG_PATH="artifacts/chess-game/capacitor.config.ts"
           if [ -f "$CONFIG_PATH" ]; then
@@ -62,11 +62,12 @@ jobs:
           VITE_APP_ENV: production
           VITE_API_URL: "https://royal-chess-empire--silgrakmarak130.replit.app"
           VITE_SERVER_URL: "https://royal-chess-empire--silgrakmarak130.replit.app"
+          VITE_ADMOB_REWARDED_ID: "ca-app-pub-4647188052127146/8272006137"
         run: |
           cd artifacts/chess-game
           pnpm run build
 
-      - name: Sync Web Assets & Plugins to Android
+      - name: Sync Web Assets & AdMob Plugins to Android
         run: |
           cd artifacts/chess-game
           npx cap sync android
@@ -79,17 +80,17 @@ jobs:
           echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
           echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
 
-      - name: Inject AdMob App ID into Android Manifest
+      - name: Inject Exact AdMob App ID & Permissions
         run: |
           MANIFEST_PATH="artifacts/chess-game/android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
-            # Cleartext traffic support
             sed -i 's/<application/<application android:usesCleartextTraffic="true"/g' "$MANIFEST_PATH"
             
-            # Inject AdMob App ID Metadata if not present
-            if ! grep -q "com.google.android.gms.ads.APPLICATION_ID" "$MANIFEST_PATH"; then
-              sed -i '/<\/application>/i \        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-4647188052127146~3312345678"\/>' "$MANIFEST_PATH"
-            fi
+            # Remove any placeholder App ID entry if present
+            sed -i '/com.google.android.gms.ads.APPLICATION_ID/d' "$MANIFEST_PATH" || true
+            
+            # Inject REAL AdMob App ID from screenshot
+            sed -i '/<\/application>/i \        <meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="ca-app-pub-4647188052127146~5480668756"\/>' "$MANIFEST_PATH"
           fi
 
       - name: Configure Gradle Memory
