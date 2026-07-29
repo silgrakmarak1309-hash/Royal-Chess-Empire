@@ -13,21 +13,18 @@ export function AdModal({ isOpen, onClose, onReward }: AdModalProps) {
       if (onReward) onReward();
       onClose();
     },
-    onError: (err) => {
-      console.warn('[AdMob] Interstitial/Rewarded failed:', err);
+    onError: () => {
       onClose();
     },
   });
 
   useEffect(() => {
     if (isOpen) {
-      showAd().then(() => {
-        onClose();
-      }).catch(() => {
+      showAd().finally(() => {
         onClose();
       });
     }
   }, [isOpen]);
 
-  return null; // Simulated web ad modal popup ko poori tarah remove kar diya!
+  return null; // Fake/Simulated ad popup screen ko completely disable kar diya
 }
