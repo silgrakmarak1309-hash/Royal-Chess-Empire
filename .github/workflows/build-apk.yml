@@ -32,8 +32,8 @@ jobs:
       - name: Create Web Dist & Assets Folder
         run: |
           cd artifacts/chess-game
-          mkdir -p dist
-          echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/index.html
+          mkdir -p dist/public
+          echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/public/index.html
           mkdir -p android/app/src/main/assets
           echo '[]' > android/app/src/main/assets/capacitor.plugins.json
 
