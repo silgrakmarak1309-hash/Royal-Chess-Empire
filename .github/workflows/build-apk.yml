@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -96,7 +97,6 @@ jobs:
               if application is not None:
                   application.set("{http://schemas.android.com/apk/res/android}usesCleartextTraffic", "true")
                   
-                  # Check if admob meta-data already exists
                   exists = False
                   for child in list(application):
                       if child.tag == "meta-data" and child.get("{http://schemas.android.com/apk/res/android}name") == "com.google.android.gms.ads.APPLICATION_ID":
