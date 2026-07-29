@@ -29,11 +29,13 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
-      - name: Create Web Dist Folder
+      - name: Create Web Dist & Assets Folder
         run: |
           cd artifacts/chess-game
           mkdir -p dist
           echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/index.html
+          mkdir -p android/app/src/main/assets
+          echo '[]' > android/app/src/main/assets/capacitor.plugins.json
 
       - name: Sync Capacitor Plugins
         run: |
