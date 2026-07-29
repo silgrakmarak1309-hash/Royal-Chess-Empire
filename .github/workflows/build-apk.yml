@@ -62,7 +62,7 @@ jobs:
         run: |
           cd artifacts/chess-game/android
           chmod +x gradlew
-          ./gradlew assembleDebug -x test --no-daemon
+          ./gradlew assembleDebug --stacktrace --quiet --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
