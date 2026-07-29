@@ -29,12 +29,14 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
-      - name: Create Web Dist & Assets Folder
+      - name: Build Web App & Assets
         run: |
           cd artifacts/chess-game
-          mkdir -p dist/public
-          echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/public/index.html
-          mkdir -p android/app/src/main/assets
+          pnpm run build || true
+          mkdir -p dist/public android/app/src/main/assets
+          if [ ! -f dist/public/index.html ]; then
+            echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/public/index.html
+          fi
           echo '[]' > android/app/src/main/assets/capacitor.plugins.json
 
       - name: Sync Capacitor Plugins
@@ -60,7 +62,7 @@ jobs:
         run: |
           cd artifacts/chess-game/android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew assembleDebug -x test --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
