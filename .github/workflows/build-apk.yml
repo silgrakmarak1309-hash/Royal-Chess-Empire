@@ -29,8 +29,9 @@ jobs:
       - name: Install Dependencies
         run: |
           cd artifacts/chess-game
-          pnpm config set approve-builds true
           pnpm install --no-frozen-lockfile
+        env:
+          PNPM_FORCE_BUILD: "true"
 
       - name: Create Web Dist Folder
         run: |
@@ -55,33 +56,6 @@ jobs:
           cd artifacts/chess-game/android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: artifacts/chess-game/android/app/build/outputs/apk/debug/app-debug.apk
-      - name: Create Web Dist Folder
-        run: |
-          cd artifacts/chess-game
-          pnpm run build --if-present
-
-      - name: Sync Capacitor Plugins
-        run: |
-          cd artifacts/chess-game
-          npx cap sync
-
-      - name: Ensure Cordova Variables File Exists
-        run: |
-          cd artifacts/chess-game
-          mkdir -p android/app/src/main/assets/
-          touch android/app/src/main/assets/capacitor.config.json || true
-
-      - name: Build APK with Gradle
-        run: |
-          cd artifacts/chess-game/android
-          chmod +x gradlew
-          ./gradlew assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
