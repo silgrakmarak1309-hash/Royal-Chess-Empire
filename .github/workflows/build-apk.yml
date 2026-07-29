@@ -43,11 +43,18 @@ jobs:
           npx cap update android
           npx cap copy android
 
-      - name: Ensure Cordova Variables File Exists
+      - name: Inject Cordova Variables Fix
         run: |
           cd artifacts/chess-game/android
           mkdir -p capacitor-cordova-android-plugins
-          echo "ext { cdvMinSizeBytes = 0; cdvPluginPostBuildExtras = []; cdvCompileSizeBytes = 0 }" > capacitor-cordova-android-plugins/cordova.variables.gradle
+          cat << 'EOF' > capacitor-cordova-android-plugins/cordova.variables.gradle
+          ext {
+              cdvMinSizeBytes = 0
+              cdvCompileSizeBytes = 0
+              cdvPluginPostBuildExtras = []
+              cdvBuildMultipleApks = false
+          }
+          EOF
 
       - name: Build APK with Gradle
         run: |
