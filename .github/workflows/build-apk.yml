@@ -34,10 +34,8 @@ jobs:
           cd artifacts/chess-game
           pnpm run build || true
           
-          # Ensure assets directory exists
+          # Web assets setup for Capacitor
           mkdir -p android/app/src/main/assets/public
-          
-          # Copy web build files if present
           if [ -d "dist" ]; then
             cp -r dist/* android/app/src/main/assets/public/
           elif [ -d "build" ]; then
@@ -48,7 +46,15 @@ jobs:
             echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><h1 style="text-align:center;margin-top:50px;">Chess Game Loaded!</h1></body></html>' > android/app/src/main/assets/public/index.html
           fi
 
-      - name: Sync Capacitor Plugins
+      - name: Prepare Capacitor Cordova Placeholders
+        run: |
+          cd artifacts/chess-game/android
+          mkdir -p capacitor-cordova-android-plugins
+          echo "ext { cdvMinSizeBytes = 0; cdvCompileSizeBytes = 0; cdvPluginPostBuildExtras = []; cdvBuildMultipleApks = false }" > capacitor-cordova-android-plugins/cordova.variables.gradle
+          echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
+          echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
+
+      - name: Sync Capacitor
         run: |
           cd artifacts/chess-game
           npx cap copy android || true
