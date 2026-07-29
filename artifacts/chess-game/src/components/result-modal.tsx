@@ -181,4 +181,4 @@ export function ResultModal({ open, status, coinsAwarded = 0, isPassAndPlay = fa
       </DialogContent>
     </Dialog>
   );
-}
+
