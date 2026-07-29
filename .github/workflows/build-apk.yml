@@ -34,9 +34,10 @@ jobs:
           cd artifacts/chess-game
           pnpm run build || true
           
-          # Fix Web Assets Location for Capacitor
+          # Ensure assets directory exists
           mkdir -p android/app/src/main/assets/public
           
+          # Copy web build files if present
           if [ -d "dist" ]; then
             cp -r dist/* android/app/src/main/assets/public/
           elif [ -d "build" ]; then
@@ -46,34 +47,22 @@ jobs:
           if [ ! -f android/app/src/main/assets/public/index.html ]; then
             echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><h1 style="text-align:center;margin-top:50px;">Chess Game Loaded!</h1></body></html>' > android/app/src/main/assets/public/index.html
           fi
-          
-          echo '[]' > android/app/src/main/assets/capacitor.plugins.json
 
       - name: Sync Capacitor Plugins
         run: |
           cd artifacts/chess-game
-          npx cap sync android || true
+          npx cap copy android || true
 
-      - name: Inject Cordova & Gradle Compatibility Fix
+      - name: Configure Gradle Memory
         run: |
           cd artifacts/chess-game/android
-          mkdir -p capacitor-cordova-android-plugins
-          cat << 'EOF' > capacitor-cordova-android-plugins/cordova.variables.gradle
-          ext {
-              cdvMinSizeBytes = 0
-              cdvCompileSizeBytes = 0
-              cdvPluginPostBuildExtras = []
-              cdvBuildMultipleApks = false
-          }
-          EOF
           echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=512m" >> gradle.properties
-          echo "android.overridePathCheck=true" >> gradle.properties
 
       - name: Build APK with Gradle
         run: |
           cd artifacts/chess-game/android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon -Dorg.gradle.debug=false
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
