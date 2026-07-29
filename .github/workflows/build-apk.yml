@@ -17,16 +17,17 @@ jobs:
         with:
           node-version: 22
 
-      - name: Setup Java JDK
+      - name: Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Install Dependencies with NPM
-        run: |
-          cd artifacts/chess-game
-          npm install --legacy-peer-deps --no-audit
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+
+      - name: Install Dependencies
+        run: pnpm install --no-frozen-lockfile --ignore-scripts
 
       - name: Create Web Dist Folder
         run: |
