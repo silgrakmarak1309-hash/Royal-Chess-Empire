@@ -17,10 +17,10 @@ jobs:
         with:
           node-version: 22
 
-      - name: Setup Java JDK 17
+      - name: Setup Java JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Install pnpm
@@ -45,7 +45,7 @@ jobs:
           npx cap update android
           npx cap copy android
 
-      - name: Inject Cordova Variables Fix
+      - name: Inject Cordova & Gradle Compatibility Fix
         run: |
           cd artifacts/chess-game/android
           mkdir -p capacitor-cordova-android-plugins
@@ -57,12 +57,14 @@ jobs:
               cdvBuildMultipleApks = false
           }
           EOF
+          echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=512m" >> gradle.properties
+          echo "android.overridePathCheck=true" >> gradle.properties
 
       - name: Build APK with Gradle
         run: |
           cd artifacts/chess-game/android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace --quiet --no-daemon
+          ./gradlew assembleDebug --no-daemon -Dorg.gradle.debug=false
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
