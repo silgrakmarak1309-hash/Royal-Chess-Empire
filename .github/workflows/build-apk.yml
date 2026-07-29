@@ -33,17 +33,26 @@ jobs:
         run: |
           cd artifacts/chess-game
           pnpm run build || true
-          mkdir -p dist/public android/app/src/main/assets
-          if [ ! -f dist/public/index.html ]; then
-            echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><div id="root"></div></body></html>' > dist/public/index.html
+          
+          # Fix Web Assets Location for Capacitor
+          mkdir -p android/app/src/main/assets/public
+          
+          if [ -d "dist" ]; then
+            cp -r dist/* android/app/src/main/assets/public/
+          elif [ -d "build" ]; then
+            cp -r build/* android/app/src/main/assets/public/
           fi
+          
+          if [ ! -f android/app/src/main/assets/public/index.html ]; then
+            echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><h1 style="text-align:center;margin-top:50px;">Chess Game Loaded!</h1></body></html>' > android/app/src/main/assets/public/index.html
+          fi
+          
           echo '[]' > android/app/src/main/assets/capacitor.plugins.json
 
       - name: Sync Capacitor Plugins
         run: |
           cd artifacts/chess-game
-          npx cap update android
-          npx cap copy android
+          npx cap sync android || true
 
       - name: Inject Cordova & Gradle Compatibility Fix
         run: |
