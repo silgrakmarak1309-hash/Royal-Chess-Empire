@@ -53,7 +53,7 @@ jobs:
           echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
           echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
 
-      - name: Allow HTTP Cleartext & Network Traffic
+      - name: Allow Network Permissions
         run: |
           MANIFEST_PATH="artifacts/chess-game/android/app/src/main/AndroidManifest.xml"
           if [ -f "$MANIFEST_PATH" ]; then
