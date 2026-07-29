@@ -29,22 +29,15 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --no-frozen-lockfile --ignore-scripts
 
-      - name: Build Web App & Assets
+      - name: Build Web App
         run: |
           cd artifacts/chess-game
-          pnpm run build || true
-          
-          # Web assets setup for Capacitor
-          mkdir -p android/app/src/main/assets/public
-          if [ -d "dist" ]; then
-            cp -r dist/* android/app/src/main/assets/public/
-          elif [ -d "build" ]; then
-            cp -r build/* android/app/src/main/assets/public/
-          fi
-          
-          if [ ! -f android/app/src/main/assets/public/index.html ]; then
-            echo '<!DOCTYPE html><html><head><title>Chess</title></head><body><h1 style="text-align:center;margin-top:50px;">Chess Game Loaded!</h1></body></html>' > android/app/src/main/assets/public/index.html
-          fi
+          pnpm run build
+
+      - name: Sync Web Assets to Android
+        run: |
+          cd artifacts/chess-game
+          npx cap sync android
 
       - name: Prepare Capacitor Cordova Placeholders
         run: |
@@ -53,11 +46,6 @@ jobs:
           echo "ext { cdvMinSizeBytes = 0; cdvCompileSizeBytes = 0; cdvPluginPostBuildExtras = []; cdvBuildMultipleApks = false }" > capacitor-cordova-android-plugins/cordova.variables.gradle
           echo "apply plugin: 'com.android.library'" > capacitor-cordova-android-plugins/build.gradle
           echo "android { compileSdk 34; namespace 'com.capacitor.cordova.plugins' }" >> capacitor-cordova-android-plugins/build.gradle
-
-      - name: Sync Capacitor
-        run: |
-          cd artifacts/chess-game
-          npx cap copy android || true
 
       - name: Configure Gradle Memory
         run: |
